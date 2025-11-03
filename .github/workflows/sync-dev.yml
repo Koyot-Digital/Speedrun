@@ -1,0 +1,34 @@
+name: Sync Dev Branch with Main
+
+on:
+  push:
+    branches:
+      - 'main'  # Trigger on commits to the `main` branch
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the feature branch
+        uses: actions/checkout@v2
+        with:
+          ref: 'dev'  # Replace this with your actual feature branch name
+
+      - name: Set up Git
+        run: |
+          git config --global user.name 'github[bot]'  # Use GitHub bot user for commits
+          git config --global user.email '41898282+github-actions[bot]@users.noreply.github.com'  # GitHub bot email
+
+      - name: Fetch latest changes
+        run: |
+          git fetch origin main
+
+      - name: Merge main into feature branch
+        run: |
+          git checkout dev
+          git merge origin/main --no-ff --commit --message "Sync feature-branch with main"
+
+      - name: Push changes
+        run: |
+          git push origin dev
