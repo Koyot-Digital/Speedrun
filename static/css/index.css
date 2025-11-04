@@ -25,15 +25,6 @@ body {
     border-radius: 4px;
 }
 
-.btn:hover {
-    background-color: #555;
-    animation: 0.2s ease-in 0s 1 normal running btn-hover;
-}
-@keyframes btn-hover {
-    from { background-color: #444; }
-    to { background-color: #555; }
-}
-
 .timer-container {
     display: flex;
     justify-content: center;
