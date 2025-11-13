@@ -5,23 +5,27 @@ import { Lock } from 'lucide-react';
 
 type LoginProps = {
   isDarkMode: boolean;
-  onLogin: (password: string) => void;
+  onLogin: (password: string) => Promise<boolean>;
 };
 
 export function Login({ isDarkMode, onLogin }: LoginProps) {
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsSubmitting(true);
     
-    // Simple password check (in real app, this would be proper auth)
-    if (password === 'admin123') {
-      onLogin(password);
-      toast.success('Logged in successfully');
-      navigate('/admin');
-    } else {
-      toast.error('Invalid password');
+    try {
+      const success = await onLogin(password);
+      if (success) {
+        navigate('/');
+      }
+    } catch (error) {
+      // Error is handled in the onLogin function
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -62,13 +66,14 @@ export function Login({ isDarkMode, onLogin }: LoginProps) {
 
           <button
             type="submit"
+            disabled={isSubmitting}
             className={`w-full py-2.5 sm:py-3 rounded-lg text-sm sm:text-base ${
               isDarkMode 
-                ? 'bg-[#D0BCFF] text-[#381E72] hover:bg-[#E8DEF8]' 
-                : 'bg-purple-600 text-white hover:bg-purple-700'
-            } transition-colors`}
+                ? 'bg-[#D0BCFF] text-[#381E72] hover:bg-[#E8DEF8] disabled:opacity-50' 
+                : 'bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50'
+            } transition-colors disabled:cursor-not-allowed`}
           >
-            Login
+            {isSubmitting ? 'Logging in...' : 'Login'}
           </button>
         </form>
 

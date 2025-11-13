@@ -7,102 +7,43 @@ import {
 } from "react-router-dom";
 import { Moon, Sun } from "lucide-react";
 import { Toaster } from "./components/ui/sonner";
+import { toast } from "sonner@2.0.3";
 import { Leaderboard } from "./components/Leaderboard";
 import { SubmitForm } from "./components/SubmitForm";
 import { Login } from "./components/Login";
 import { Admin } from "./components/Admin";
 import svgPaths from "./imports/svg-y4iefl7a0w";
+import * as api from "./services/api";
 
 type LeaderboardEntry = {
   id: string;
-  username: string;
+  userID: Number;
   category: string;
   score: string;
-  avatarColor: string;
-  avatarLetter: string;
+  avatarURI: string;
   submissionDate: Date;
   status?: string;
+  username?: string;
+  avatarColor?: string;
+  avatarLetter?: string;
+  proofUrl?: string;
 };
 
 const initialData: LeaderboardEntry[] = [
   {
     id: "1",
-    username: "@Builderman",
+    userID: 123456789,
     category: "Meltdown%",
     score: "2:33",
-    avatarColor: "#000000",
-    avatarLetter: "B",
+    avatarURI: "https://example.org/favicon.ico",
     submissionDate: new Date("2025-01-15"),
-  },
-  {
-    id: "2",
-    username: "@Builderman",
-    category: "Eff%",
-    score: "190%",
-    avatarColor: "#EADDFF",
-    avatarLetter: "B",
-    submissionDate: new Date("2025-02-10"),
-  },
-  {
-    id: "3",
-    username: "@Builderman",
-    category: "Die%",
-    score: "0:00.2",
-    avatarColor: "#000000",
-    avatarLetter: "B",
-    submissionDate: new Date("2025-01-20"),
-  },
-  {
-    id: "4",
-    username: "@SpeedRunner",
-    category: "Meltdown%",
-    score: "2:45",
-    avatarColor: "#FF6B6B",
-    avatarLetter: "S",
-    submissionDate: new Date("2025-02-01"),
-  },
-  {
-    id: "5",
-    username: "@ProGamer",
-    category: "Eff%",
-    score: "185%",
-    avatarColor: "#4ECDC4",
-    avatarLetter: "P",
-    submissionDate: new Date("2025-01-25"),
-  },
-  {
-    id: "6",
-    username: "@NinjaMaster",
-    category: "Startup%",
-    score: "0:15.3",
-    avatarColor: "#95E1D3",
-    avatarLetter: "N",
-    submissionDate: new Date("2025-02-05"),
-  },
-  {
-    id: "7",
-    username: "@Speedster",
-    category: "Die%",
-    score: "0:00.5",
-    avatarColor: "#F38181",
-    avatarLetter: "S",
-    submissionDate: new Date("2025-01-18"),
-  },
-  {
-    id: "8",
-    username: "@Champion",
-    category: "Meltdown%",
-    score: "2:28",
-    avatarColor: "#AA96DA",
-    avatarLetter: "C",
-    submissionDate: new Date("2025-02-12"),
-  },
+  }
 ];
 
 function App() {
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [activeTab, setActiveTab] = useState<
-    "leaderboard" | "submit" | "rules"
+    "leaderboard" | "submit" | "rules" | "admin"
   >("leaderboard");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [approvedEntries, setApprovedEntries] = useState<
@@ -111,47 +52,90 @@ function App() {
   const [pendingSubmissions, setPendingSubmissions] = useState<
     LeaderboardEntry[]
   >([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Load data from localStorage on mount
+  // Load data from API on mount
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem("darkMode");
-    if (savedDarkMode !== null) {
-      setIsDarkMode(JSON.parse(savedDarkMode));
-    }
+    const loadData = async () => {
+      setIsLoading(true);
+      
+      // Load dark mode preference
+      const savedDarkMode = localStorage.getItem("darkMode");
+      if (savedDarkMode !== null) {
+        setIsDarkMode(JSON.parse(savedDarkMode));
+      }
 
-    const savedAuth = localStorage.getItem("isAuthenticated");
-    if (savedAuth) {
-      setIsAuthenticated(JSON.parse(savedAuth));
-    }
+      // Check authentication
+      const authStatus = api.isAuthenticated();
+      setIsAuthenticated(authStatus);
 
-    const savedApproved = localStorage.getItem(
-      "approvedEntries",
-    );
-    if (savedApproved) {
-      const parsed = JSON.parse(savedApproved);
-      setApprovedEntries(
-        parsed.map((e: any) => ({
-          ...e,
-          submissionDate: new Date(e.submissionDate),
-        })),
-      );
-    } else {
-      setApprovedEntries(initialData);
-    }
+      // Fetch approved leaderboard entries
+      try {
+        const entries = await api.fetchLeaderboardEntries();
+        setApprovedEntries(entries as LeaderboardEntry[]);
+      } catch (error) {
+        console.error('Failed to load leaderboard entries:', error);
+        // Fallback to localStorage
+        const savedApproved = localStorage.getItem("approvedEntries");
+        if (savedApproved) {
+          const parsed = JSON.parse(savedApproved);
+          setApprovedEntries(
+            parsed.map((e: any) => ({
+              ...e,
+              submissionDate: new Date(e.submissionDate),
+            })),
+          );
+        } else {
+          setApprovedEntries(initialData);
+        }
+      }
 
-    const savedPending = localStorage.getItem(
-      "pendingSubmissions",
-    );
-    if (savedPending) {
-      const parsed = JSON.parse(savedPending);
-      setPendingSubmissions(
-        parsed.map((e: any) => ({
-          ...e,
-          submissionDate: new Date(e.submissionDate),
-        })),
-      );
-    }
+      // Fetch pending submissions if authenticated
+      if (authStatus) {
+        try {
+          const submissions = await api.fetchPendingSubmissions();
+          setPendingSubmissions(submissions as LeaderboardEntry[]);
+        } catch (error) {
+          console.error('Failed to load pending submissions:', error);
+          // Fallback to localStorage
+          const savedPending = localStorage.getItem("pendingSubmissions");
+          if (savedPending) {
+            const parsed = JSON.parse(savedPending);
+            setPendingSubmissions(
+              parsed.map((e: any) => ({
+                ...e,
+                submissionDate: new Date(e.submissionDate),
+              })),
+            );
+          }
+        }
+      }
+
+      setIsLoading(false);
+    };
+
+    loadData();
   }, []);
+
+  // Reload pending submissions when authentication status changes
+  useEffect(() => {
+    const loadPendingSubmissions = async () => {
+      if (isAuthenticated) {
+        try {
+          const submissions = await api.fetchPendingSubmissions();
+          setPendingSubmissions(submissions as LeaderboardEntry[]);
+        } catch (error) {
+          console.error('Failed to load pending submissions:', error);
+        }
+      } else {
+        setPendingSubmissions([]);
+      }
+    };
+
+    if (isAuthenticated) {
+      loadPendingSubmissions();
+    }
+  }, [isAuthenticated]);
 
   // Save to localStorage when data changes
   useEffect(() => {
@@ -160,13 +144,6 @@ function App() {
       JSON.stringify(isDarkMode),
     );
   }, [isDarkMode]);
-
-  useEffect(() => {
-    localStorage.setItem(
-      "isAuthenticated",
-      JSON.stringify(isAuthenticated),
-    );
-  }, [isAuthenticated]);
 
   useEffect(() => {
     localStorage.setItem(
@@ -182,36 +159,84 @@ function App() {
     );
   }, [pendingSubmissions]);
 
-  const handleSubmission = (submission: LeaderboardEntry) => {
-    setPendingSubmissions([...pendingSubmissions, submission]);
-  };
-
-  const handleApprove = (id: string) => {
-    const submission = pendingSubmissions.find(
-      (s) => s.id === id,
-    );
-    if (submission) {
-      const approved = { ...submission, status: "approved" };
-      delete approved.status;
-      setApprovedEntries([...approvedEntries, approved]);
-      setPendingSubmissions(
-        pendingSubmissions.filter((s) => s.id !== id),
-      );
+  const handleSubmission = async (submission: any) => {
+    try {
+      await api.submitEntry({
+        username: submission.username,
+        category: submission.category,
+        score: submission.score,
+        proofUrl: submission.proofUrl,
+      });
+      toast.success('Submission sent for review!');
+    } catch (error) {
+      toast.error('Failed to submit entry');
+      console.error('Submission error:', error);
+      // Fallback to local state
+      setPendingSubmissions([...pendingSubmissions, submission]);
     }
   };
 
-  const handleReject = (id: string) => {
-    setPendingSubmissions(
-      pendingSubmissions.filter((s) => s.id !== id),
-    );
+  const handleApprove = async (id: string) => {
+    try {
+      await api.approveSubmission(id);
+      
+      // Update local state
+      const submission = pendingSubmissions.find((s) => s.id === id);
+      if (submission) {
+        const approved = { ...submission };
+        delete approved.status;
+        setApprovedEntries([...approvedEntries, approved]);
+        setPendingSubmissions(pendingSubmissions.filter((s) => s.id !== id));
+      }
+      
+      // Refresh data from API
+      try {
+        const entries = await api.fetchLeaderboardEntries();
+        setApprovedEntries(entries as LeaderboardEntry[]);
+      } catch (error) {
+        console.error('Failed to refresh leaderboard:', error);
+      }
+    } catch (error) {
+      toast.error('Failed to approve submission');
+      console.error('Approve error:', error);
+    }
   };
 
-  const handleLogin = () => {
-    setIsAuthenticated(true);
+  const handleReject = async (id: string) => {
+    try {
+      await api.rejectSubmission(id);
+      
+      // Update local state
+      setPendingSubmissions(pendingSubmissions.filter((s) => s.id !== id));
+    } catch (error) {
+      toast.error('Failed to reject submission');
+      console.error('Reject error:', error);
+    }
   };
 
-  const handleLogout = () => {
-    setIsAuthenticated(false);
+  const handleLogin = async (password: string) => {
+    try {
+      await api.login(password);
+      setIsAuthenticated(true);
+      toast.success('Logged in successfully');
+      return true;
+    } catch (error) {
+      toast.error('Invalid credentials');
+      console.error('Login error:', error);
+      return false;
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await api.logout();
+      setIsAuthenticated(false);
+      setPendingSubmissions([]);
+    } catch (error) {
+      console.error('Logout error:', error);
+      setIsAuthenticated(false);
+      setPendingSubmissions([]);
+    }
   };
 
   return (
@@ -367,6 +392,35 @@ function App() {
                     </svg>
                     Rules
                   </button>
+                  {isAuthenticated && (
+                    <button
+                      onClick={() => setActiveTab("admin")}
+                      className={`flex items-center gap-2 px-3 sm:px-4 py-3 rounded-lg transition-colors whitespace-nowrap ${
+                        activeTab === "admin"
+                          ? isDarkMode
+                            ? "bg-[#332D41] text-[#E8DEF8]"
+                            : "bg-purple-100 text-purple-900"
+                          : isDarkMode
+                            ? "bg-transparent text-[#4A4458] hover:bg-[#2A2730]"
+                            : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      }`}
+                    >
+                      <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        className="flex-shrink-0"
+                      >
+                        <path
+                          d="M8 0C6.9 0 6 0.9 6 2C6 3.1 6.9 4 8 4C9.1 4 10 3.1 10 2C10 0.9 9.1 0 8 0ZM8 14C6.9 14 6 14.9 6 16C6 17.1 6.9 18 8 18C9.1 18 10 17.1 10 16C10 14.9 9.1 14 8 14ZM8 7C6.9 7 6 7.9 6 9C6 10.1 6.9 11 8 11C9.1 11 10 10.1 10 9C10 7.9 9.1 7 8 7Z"
+                          fill="currentColor"
+                          transform="scale(0.5) translate(8, 0)"
+                        />
+                      </svg>
+                      Admin
+                    </button>
+                  )}
                 </div>
 
                 {activeTab === "leaderboard" && (
@@ -451,6 +505,16 @@ function App() {
                       </div>
                     </div>
                   </div>
+                )}
+
+                {activeTab === "admin" && (
+                  <Admin
+                    isDarkMode={isDarkMode}
+                    pendingSubmissions={pendingSubmissions}
+                    onApprove={handleApprove}
+                    onReject={handleReject}
+                    onLogout={handleLogout}
+                  />
                 )}
               </div>
             }

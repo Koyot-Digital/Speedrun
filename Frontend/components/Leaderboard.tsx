@@ -3,12 +3,11 @@ import svgPaths from "../imports/svg-y4iefl7a0w";
 import img from "figma:asset/cdcad6974008a09fa518d991b491c95dface759b.png";
 
 type LeaderboardEntry = {
-  id: string;
-  username: string;
+  id: Number;
+  userID: Number;
   category: string;
   score: string;
-  avatarColor: string;
-  avatarLetter: string;
+  avatarURI: string;
   submissionDate: Date;
 };
 
@@ -32,14 +31,14 @@ export function Leaderboard({ isDarkMode, entries }: LeaderboardProps) {
 
   const filteredAndSortedData = entries
     .filter(entry => {
-      const matchesSearch = entry.username.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesSearch = entry.userID.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesCategory = entry.category === selectedCategory;
       return matchesSearch && matchesCategory;
     })
     .sort((a, b) => {
       let comparison = 0;
       if (sortBy === 'name') {
-        comparison = a.username.localeCompare(b.username);
+        comparison = a.userID.localeCompare(b.userID);
       } else if (sortBy === 'submission') {
         comparison = a.submissionDate.getTime() - b.submissionDate.getTime();
       } else {
@@ -73,7 +72,7 @@ export function Leaderboard({ isDarkMode, entries }: LeaderboardProps) {
             )}
           </div>
           <div className={`absolute -top-2 left-3 px-1 text-xs ${isDarkMode ? 'bg-[#2B2930] text-[#CAC4D0]' : 'bg-gray-100 text-gray-600'}`}>
-            Search By Username
+            Search By Display name
           </div>
         </div>
       </div>
@@ -182,7 +181,7 @@ export function Leaderboard({ isDarkMode, entries }: LeaderboardProps) {
                       {entry.score} - {entry.category}
                     </p>
                     <p className={`text-xs sm:text-sm truncate ${isDarkMode ? 'text-[#938F99]' : 'text-gray-600'}`}>
-                      {entry.username}
+                      {entry.userID}
                     </p>
                   </div>
                 </div>
