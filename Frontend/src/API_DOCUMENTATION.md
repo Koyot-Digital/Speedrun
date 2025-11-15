@@ -11,7 +11,7 @@ https://speedrun.koyot.digital/api/v1
 
 #### Get Leaderboard Entries
 ```
-GET /leaderboard
+GET /submissions
 ```
 Fetches all approved leaderboard entries.
 
@@ -34,7 +34,7 @@ Fetches all approved leaderboard entries.
 
 #### Submit Entry
 ```
-POST /submit
+POST /submissions
 ```
 Submit a new speedrun entry for admin review.
 
@@ -53,15 +53,14 @@ Submit a new speedrun entry for admin review.
 
 #### Login
 ```
-POST /auth/discord/login
-POST /auth/discord/callback
+POST /auth/login
 ```
 Authenticate as admin.
 
 **Request Body:**
 ```json
 {
-  "password": "string"
+  whatever the discord auth is lol
 }
 ```
 
@@ -80,7 +79,7 @@ Authorization: Bearer <token>
 
 #### Get Pending Submissions
 ```
-GET /pending-runs
+GET /submissions
 ```
 Fetch all pending submissions awaiting admin review.
 
@@ -93,14 +92,13 @@ Authorization: Bearer <token>
 ```json
 [
   {
-    "id": "string",
-    "username": "string",
+    "id": "int",
+    "userID": "int",
     "category": "string",
     "score": "string",
-    "proofUrl": "string",
+    "proofUrl": "url",
     "submissionDate": "ISO 8601 date string",
-    "avatarColor": "string",
-    "avatarLetter": "string"
+    "avatarURI": "URI"
   }
 ]
 ```
@@ -108,7 +106,7 @@ ISO 8601:
 https://www.iso.org/iso-8601-date-and-time-format.html
 #### Approve Submission
 ```
-POST /submissions/verify
+POST /submissions/approve
 ```
 Approve a pending submission and add it to the leaderboard.
 
@@ -116,9 +114,13 @@ Approve a pending submission and add it to the leaderboard.
 ```
 Authorization: Bearer <token>
 ```
-
-**URL Parameters:**
-- `id`: Submission ID
+""
+**Body:**
+```json
+{
+  "id": "int"
+}
+```
 
 #### Reject Submission
 ```
@@ -130,6 +132,14 @@ Reject and remove a pending submission.
 ```
 Authorization: Bearer <token>
 ```
+""
+**Body:**
+```json
+{
+  "id": "int"
+}
+```
+
 
 ## Authentication
 

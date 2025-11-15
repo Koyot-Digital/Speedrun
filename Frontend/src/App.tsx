@@ -12,6 +12,7 @@ import { Leaderboard } from "./components/Leaderboard";
 import { SubmitForm } from "./components/SubmitForm";
 import { Login } from "./components/Login";
 import { Admin } from "./components/Admin";
+import { Footer } from "./components/Footer";
 import svgPaths from "./imports/svg-y4iefl7a0w";
 import * as api from "./services/api";
 
@@ -75,6 +76,7 @@ function App() {
         setApprovedEntries(entries as LeaderboardEntry[]);
       } catch (error) {
         console.error('Failed to load leaderboard entries:', error);
+        toast.error('Cannot connect to API - Using cached data');
         // Fallback to localStorage
         const savedApproved = localStorage.getItem("approvedEntries");
         if (savedApproved) {
@@ -97,6 +99,7 @@ function App() {
           setPendingSubmissions(submissions as LeaderboardEntry[]);
         } catch (error) {
           console.error('Failed to load pending submissions:', error);
+          toast.error('Cannot connect to API - Using cached submissions');
           // Fallback to localStorage
           const savedPending = localStorage.getItem("pendingSubmissions");
           if (savedPending) {
@@ -169,10 +172,11 @@ function App() {
       });
       toast.success('Submission sent for review!');
     } catch (error) {
-      toast.error('Failed to submit entry');
+      toast.error('Cannot connect to API - Submission saved locally');
       console.error('Submission error:', error);
       // Fallback to local state
       setPendingSubmissions([...pendingSubmissions, submission]);
+      toast.info('Your submission will be synced when connection is restored');
     }
   };
 
@@ -527,6 +531,7 @@ function App() {
           />
         </Routes>
         <Toaster theme={isDarkMode ? "dark" : "light"} />
+        <Footer isDarkMode={isDarkMode} />
       </div>
     </BrowserRouter>
   );

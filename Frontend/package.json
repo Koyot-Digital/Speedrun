@@ -1,7 +1,7 @@
 
   {
-      "name": "Leaderboard Website with Dark Mode",
-      "version": "0.1.0",
+      "name": "Speedruning",
+      "version": "0.0.1",
       "private": true,
       "dependencies": {
           "@radix-ui/react-accordion": "^1.2.3",

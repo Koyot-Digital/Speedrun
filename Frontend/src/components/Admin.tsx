@@ -21,7 +21,7 @@ export function Admin({ isDarkMode, pendingSubmissions, onApprove, onReject, onL
 
   const handleApprove = (id: string) => {
     onApprove(id);
-    toast.success('Submission approved');
+    toast.success('Submission approved successfully');
   };
 
   const handleReject = (id: string) => {

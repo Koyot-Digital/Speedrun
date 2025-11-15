@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { ExternalLink } from 'lucide-react';
 import svgPaths from "../imports/svg-y4iefl7a0w";
 import img from "figma:asset/cdcad6974008a09fa518d991b491c95dface759b.png";
 
@@ -9,6 +10,7 @@ type LeaderboardEntry = {
   score: string;
   avatarURI: string;
   submissionDate: Date;
+  proofUrl?: URL;
 };
 
 type LeaderboardProps = {
@@ -177,9 +179,22 @@ export function Leaderboard({ isDarkMode, entries }: LeaderboardProps) {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-sm sm:text-base truncate ${isDarkMode ? 'text-[#E6E0E9]' : 'text-gray-900'}`}>
-                      {entry.score} - {entry.category}
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className={`text-sm sm:text-base truncate ${isDarkMode ? 'text-[#E6E0E9]' : 'text-gray-900'}`}>
+                        {entry.score} - {entry.category}
+                      </p>
+                      {entry.proofUrl && (
+                        <a
+                          href={entry.proofUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`flex-shrink-0 ${isDarkMode ? 'text-[#D0BCFF] hover:text-[#E8DEF8]' : 'text-purple-600 hover:text-purple-700'}`}
+                          title="View proof video"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </a>
+                      )}
+                    </div>
                     <p className={`text-xs sm:text-sm truncate ${isDarkMode ? 'text-[#938F99]' : 'text-gray-600'}`}>
                       {entry.userID}
                     </p>

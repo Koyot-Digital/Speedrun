@@ -1,23 +1,22 @@
 const API_BASE_URL = 'https://speedrun.koyot.digital/api/v1';
 
 export type LeaderboardEntry = {
-  id: string;
-  userID: number;
+  id: bigint;
+  userID: bigint;
   category: string;
   score: string;
   avatarURI: string;
   submissionDate: Date | string;
   username?: string;
-  avatarColor?: string;
-  avatarLetter?: string;
-  proofUrl?: string;
+  pfpURI: URL;
+  proofUrl?: URL;
 };
 
 export type SubmissionData = {
-  username: string;
+  userID: bigint;
   category: string;
   score: string;
-  proofUrl?: string;
+  proofUrl?: URL;
 };
 
 // Get auth token from localStorage
@@ -146,7 +145,7 @@ export const approveSubmission = async (id: string): Promise<void> => {
   const token = getAuthToken();
   
   try {
-    const response = await fetch(`${API_BASE_URL}/submission/approve`, {
+    const response = await fetch(`${API_BASE_URL}/submissions/approve`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +155,7 @@ export const approveSubmission = async (id: string): Promise<void> => {
     });
 
     if (!response.ok) {
-      throw new Error('Failed to approve submission');
+      throw new Error('Failed to approve submission, please make a bug report on the GitHub, link in footer. Include a screenshot or copy-paste of the console logs.');
     }
   } catch (error) {
     console.error('Error approving submission:', error);
@@ -177,9 +176,11 @@ export const rejectSubmission = async (id: string): Promise<void> => {
       },
       body: id,
     });
-
+    if (response.ok) {
+      throw new Error('Rejected submission successfuly.');
+    }
     if (!response.ok) {
-      throw new Error('Failed to reject submission, please make a bug report on the github.');
+      throw new Error('Failed to reject submission, please make a bug report on the GitHub, link in footer. Include a screenshot or copy-paste of the console logs.');
     }
   } catch (error) {
     console.error('Error rejecting submission:', error);
